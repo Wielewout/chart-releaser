@@ -378,6 +378,7 @@ func TestReleaser_CreateReleases(t *testing.T) {
 					Commit:            "",
 					PackagesWithIndex: false,
 					MakeReleaseLatest: true,
+					SkipExisting:      false,
 				},
 			},
 			error: true,
@@ -395,6 +396,7 @@ func TestReleaser_CreateReleases(t *testing.T) {
 					Commit:            "",
 					PackagesWithIndex: false,
 					MakeReleaseLatest: true,
+					SkipExisting:      false,
 				},
 			},
 			error: false,
@@ -412,6 +414,7 @@ func TestReleaser_CreateReleases(t *testing.T) {
 					Commit:            "5e239bd19fbefb9eb0181ecf0c7ef73b8fe2753c",
 					PackagesWithIndex: false,
 					MakeReleaseLatest: true,
+					SkipExisting:      false,
 				},
 			},
 			error: false,
@@ -430,6 +433,25 @@ func TestReleaser_CreateReleases(t *testing.T) {
 					PackagesWithIndex: true,
 					Push:              true,
 					MakeReleaseLatest: true,
+					SkipExisting:      false,
+				},
+			},
+			error: false,
+		},
+		{
+			name:        "existing-package",
+			packagePath: "testdata/release-packages",
+			chart:       "test-chart",
+			version:     "0.1.0",
+			commit:      "",
+			latest:      "true",
+			Releaser: &Releaser{
+				config: &config.Options{
+					PackagePath:       "testdata/release-packages",
+					Commit:            "",
+					PackagesWithIndex: false,
+					MakeReleaseLatest: true,
+					SkipExisting:      true,
 				},
 			},
 			error: false,
@@ -454,6 +476,9 @@ func TestReleaser_CreateReleases(t *testing.T) {
 			if tt.error {
 				assert.Error(t, err)
 				assert.Nil(t, fakeGitHub.release)
+				fakeGitHub.AssertNumberOfCalls(t, "CreateRelease", 0)
+			} else if tt.Releaser.config.SkipExisting {
+				assert.NoError(t, err)
 				fakeGitHub.AssertNumberOfCalls(t, "CreateRelease", 0)
 			} else {
 				assert.NoError(t, err)
